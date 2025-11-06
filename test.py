@@ -1,3 +1,9 @@
+"""
+用于手动测试xtquantai功能的脚本。
+
+此脚本包含一些示例代码片段，用于测试`xtquant`库的各种功能，
+例如获取股票详情和创建图表面板。
+"""
 from xtquant import xtdata
 from xtquant.xtdata import UIPanel
 

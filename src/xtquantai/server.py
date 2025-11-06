@@ -121,7 +121,11 @@ server = Server("xtquantai")
 
 def ensure_xtdc_initialized():
     """
-    确保XTQuant数据中心已初始化
+    确保XTQuant数据中心已初始化。
+
+    该函数检查`xtdc_initialized`全局变量。如果尚未初始化，
+    它会尝试通过调用`xtdata.start_xtdata()`（如果存在）来启动XTQuant数据中心，
+    并将`xtdc_initialized`设置为True。如果初始化失败，则会打印错误消息。
     """
     global xtdc_initialized
     if not xtdc_initialized:
@@ -172,21 +176,42 @@ class CreateCustomLayoutInput(BaseModel):
 @server.list_resources()
 async def handle_list_resources() -> list[types.Resource]:
     """
-    List available resources.
+    列出可用资源。
+
+    此函数目前返回一个空列表，因为此服务器中没有定义资源。
+
+    Returns:
+        一个空的资源列表。
     """
     return []
 
 @server.read_resource()
 async def handle_read_resource(uri: AnyUrl) -> str:
     """
-    Read a specific resource.
+    读取特定资源。
+
+    此函数目前会引发`ValueError`，因为不支持任何资源URI。
+
+    Args:
+        uri: 要读取的资源的URI。
+
+    Returns:
+        资源的字符串内容。
+
+    Raises:
+        ValueError: 如果URI不受支持。
     """
     raise ValueError(f"Unsupported URI: {uri}")
 
 @server.list_prompts()
 async def handle_list_prompts() -> list[types.Prompt]:
     """
-    List available prompts.
+    列出可用提示。
+
+    此函数目前返回一个空列表，因为此服务器中没有定义提示。
+
+    Returns:
+        一个空的提示列表。
     """
     return []
 
@@ -195,14 +220,31 @@ async def handle_get_prompt(
     name: str, arguments: dict[str, str] | None
 ) -> types.GetPromptResult:
     """
-    Get a specific prompt.
+    获取特定提示。
+
+    此函数目前会引发`ValueError`，因为没有已知的提示。
+
+    Args:
+        name: 要获取的提示的名称。
+        arguments: 提示的参数。
+
+    Returns:
+        获取提示的结果。
+
+    Raises:
+        ValueError: 如果提示名称未知。
     """
     raise ValueError(f"Unknown prompt: {name}")
 
 @server.list_tools()
 async def handle_list_tools() -> list[types.Tool]:
     """
-    List available tools.
+    列出所有可用工具。
+
+    此函数向MCP客户端提供可用工具的列表，包括其名称、描述和输入模式。
+
+    Returns:
+        一个`types.Tool`对象列表，描述每个可用工具。
     """
     print("handle_list_tools被调用，返回所有工具")
     tools = [
@@ -412,7 +454,20 @@ async def handle_call_tool(
     name: str, arguments: dict | None
 ) -> list[types.TextContent | types.ImageContent | types.EmbeddedResource]:
     """
-    Call a specific tool.
+    调用特定的工具。
+
+    此函数根据提供的名称和参数执行工具。它将参数路由到适当的工具实现函数，
+    并以MCP客户端可以使用的格式返回结果。
+
+    Args:
+        name: 要调用的工具的名称。
+        arguments: 工具的参数字典。
+
+    Returns:
+        内容对象列表，表示工具执行的结果。
+
+    Raises:
+        ValueError: 如果工具名称未知。
     """
     if name == "get_trading_dates":
         market = "SH"
@@ -585,13 +640,15 @@ async def handle_call_tool(
 # 工具函数实现，不使用装饰器
 async def get_trading_dates(input: GetTradingDatesInput) -> List[str]:
     """
-    获取指定市场的交易日期列表
-    
+    获取指定市场的交易日期列表。
+
     Args:
-        market: 市场代码，例如 "SH" 表示上海市场
-        
+        input: 包含`market`参数的输入模型。
+            market: 市场代码 (例如, "SH" 代表上海市场)。
+
     Returns:
-        交易日期列表
+        字符串列表，表示指定市场的交易日期。
+        如果出错则返回包含错误信息的列表。
     """
     try:
         # 确保XTQuant数据中心已初始化
@@ -636,13 +693,15 @@ async def get_trading_dates(input: GetTradingDatesInput) -> List[str]:
 
 async def get_stock_list(input: GetStockListInput) -> List[str]:
     """
-    获取指定板块的股票列表
-    
+    获取指定板块的股票列表。
+
     Args:
-        sector: 板块名称，例如 "沪深A股"
-        
+        input: 包含`sector`参数的输入模型。
+            sector: 板块名称 (例如, "沪深A股")。
+
     Returns:
-        股票代码列表
+        字符串列表，表示指定板块的股票代码。
+        如果出错则返回包含错误信息的列表。
     """
     try:
         # 确保XTQuant数据中心已初始化
@@ -668,14 +727,16 @@ async def get_stock_list(input: GetStockListInput) -> List[str]:
 
 async def get_instrument_detail(input: GetInstrumentDetailInput) -> Dict[str, Any]:
     """
-    获取指定股票的详细信息
-    
+    获取指定股票的详细信息。
+
     Args:
-        code: 股票代码，例如 "000001.SZ"
-        iscomplete: 是否获取全部字段，默认为False
-        
+        input: 包含`code`和`iscomplete`参数的输入模型。
+            code: 股票代码 (例如, "000001.SZ")。
+            iscomplete: 是否获取完整数据 (默认为 False)。
+
     Returns:
-        股票详细信息
+        包含股票详细信息的字典。
+        如果出错则返回包含错误信息的字典。
     """
     try:
         # 确保XTQuant数据中心已初始化
@@ -709,17 +770,19 @@ async def get_instrument_detail(input: GetInstrumentDetailInput) -> Dict[str, An
 # 新增的工具函数实现
 async def get_history_market_data(input: GetMarketDataInput) -> Dict[str, Any]:
     """
-    获取历史行情数据
-    
+    获取历史行情数据。
+
     Args:
-        codes: 股票代码列表，用逗号分隔，例如 "000001.SZ,600519.SH"
-        period: 周期，例如 "1d", "1m", "5m" 等
-        start_date: 开始日期，格式为 "YYYYMMDD"
-        end_date: 结束日期，格式为 "YYYYMMDD"，为空表示当前日期
-        fields: 字段列表，用逗号分隔，为空表示所有字段
-        
+        input: 包含市场数据请求参数的输入模型。
+            codes: 以逗号分隔的股票代码字符串 (例如, "000001.SZ,600519.SH")。
+            period: 数据周期 (例如, "1d", "1m", "5m")。
+            start_date: 开始日期 "YYYYMMDD"。
+            end_date: 结束日期 "YYYYMMDD"。
+            fields: 以逗号分隔的字段列表。
+
     Returns:
-        历史行情数据
+        包含历史市场数据的字典。
+        如果出错则返回包含错误信息的字典。
     """
     try:
         # 确保XTQuant数据中心已初始化
@@ -778,14 +841,16 @@ async def get_history_market_data(input: GetMarketDataInput) -> Dict[str, Any]:
 
 async def get_latest_market_data(input: GetMarketDataInput) -> Dict[str, Any]:
     """
-    获取最新行情数据
-    
+    获取最新行情数据。
+
     Args:
-        codes: 股票代码列表，用逗号分隔，例如 "000001.SZ,600519.SH"
-        period: 周期，例如 "1d", "1m", "5m" 等
-        
+        input: 包含市场数据请求参数的输入模型。
+            codes: 以逗号分隔的股票代码字符串 (例如, "000001.SZ,600519.SH")。
+            period: 数据周期 (例如, "1d", "1m", "5m")。
+
     Returns:
-        最新行情数据
+        包含最新市场数据的字典。
+        如果出错则返回包含错误信息的字典。
     """
     try:
         # 确保XTQuant数据中心已初始化
@@ -844,17 +909,19 @@ async def get_latest_market_data(input: GetMarketDataInput) -> Dict[str, Any]:
 
 async def get_full_market_data(input: GetMarketDataInput) -> Dict[str, Any]:
     """
-    获取历史+最新行情数据
-    
+    获取历史和最新行情数据。
+
     Args:
-        codes: 股票代码列表，用逗号分隔，例如 "000001.SZ,600519.SH"
-        period: 周期，例如 "1d", "1m", "5m" 等
-        start_date: 开始日期，格式为 "YYYYMMDD"
-        end_date: 结束日期，格式为 "YYYYMMDD"，为空表示当前日期
-        fields: 字段列表，用逗号分隔，为空表示所有字段
-        
+        input: 包含市场数据请求参数的输入模型。
+            codes: 以逗号分隔的股票代码字符串 (例如, "000001.SZ,600519.SH")。
+            period: 数据周期 (例如, "1d", "1m", "5m")。
+            start_date: 开始日期 "YYYYMMDD"。
+            end_date: 结束日期 "YYYYMMDD"。
+            fields: 以逗号分隔的字段列表。
+
     Returns:
-        历史+最新行情数据
+        包含历史和最新市场数据的字典。
+        如果出错则返回包含错误信息的字典。
     """
     try:
         # 确保XTQuant数据中心已初始化
@@ -923,7 +990,17 @@ async def get_full_market_data(input: GetMarketDataInput) -> Dict[str, Any]:
 
 async def create_chart_panel(input: CreateChartPanelInput) -> Dict[str, Any]:
     """
-    创建图表面板，显示指定股票的技术指标
+    创建显示指定股票技术指标的图表面板。
+
+    Args:
+        input: 包含图表创建参数的输入模型。
+            codes: 以逗号分隔的股票代码字符串。
+            period: 数据周期。
+            indicators: 以逗号分隔的技术指标列表。
+            params: 以逗号分隔的指标参数。
+
+    Returns:
+        包含操作结果的字典，包括成功或失败消息以及调试信息。
     """
     try:
         # 确保XTQuant数据中心已初始化
@@ -1121,7 +1198,18 @@ async def create_chart_panel(input: CreateChartPanelInput) -> Dict[str, Any]:
 # 新增: 创建自定义布局函数
 async def create_custom_layout(input: CreateCustomLayoutInput) -> Dict[str, Any]:
     """
-    创建自定义布局，可以指定指标名称、参数名和参数值
+    创建自定义布局，允许指定指标名称、参数名称和参数值。
+
+    Args:
+        input: 包含自定义布局参数的输入模型。
+            codes: 以逗号分隔的股票代码字符串。
+            period: 数据周期。
+            indicator_name: 技术指标的名称。
+            param_names: 以逗号分隔的参数名称。
+            param_values: 以逗号分隔的参数值。
+
+    Returns:
+        包含操作结果的字典，包括成功或失败消息以及调试信息。
     """
     try:
         # 确保XTQuant数据中心已初始化
@@ -1304,6 +1392,12 @@ async def create_custom_layout(input: CreateCustomLayoutInput) -> Dict[str, Any]
         }
 
 async def main():
+    """
+    服务器的主入口点。
+
+    此函数初始化并运行MCP服务器，处理传入的请求并将其分派给适当的处理程序。
+    它还会在启动时打印所有已注册的工具。
+    """
     # 打印所有注册的工具
     print("\n在server.py中打印所有工具:")
     tools = await handle_list_tools()

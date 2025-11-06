@@ -121,6 +121,27 @@ python -m xtquantai
 xtquantai
 ```
 
+### 独立HTTP服务器
+
+`server_direct.py`提供了一个不依赖于MCP的独立HTTP服务器。这对于直接测试API端点或在不支持MCP的环境中使用非常有用。
+
+要启动独立服务器，请运行：
+```bash
+python server_direct.py --port 8000
+```
+
+服务器将在`http://localhost:8000`上可用。
+
+#### API 端点
+
+*   `GET /api/list_tools`: 列出所有可用的工具。
+*   `GET/POST /api/get_trading_dates`: 获取交易日期。
+*   `GET/POST /api/get_stock_list`: 获取板块股票列表。
+*   `GET/POST /api/get_instrument_detail`: 获取股票详情。
+*   `GET/POST /api/get_history_market_data`: 获取历史行情数据。
+*   `GET/POST /api/create_chart_panel`: 创建图表面板。
+*   `GET/POST /api/create_custom_layout`: 创建自定义布局。
+
 ### 使用 MCP Inspector 进行调试（仅在开发的的时候使用）
 
 需要安装 node 环境。
@@ -158,10 +179,12 @@ xtquantai/
 ├── src/
 │   └── xtquantai/
 │       ├── __init__.py    # 包初始化文件
-│       └── server.py      # MCP 服务器实现
-├── main.py                # 启动脚本
-├── server_direct.py       # 直接 HTTP 服务器实现
-├── pyproject.toml         # 项目配置
+│       └── server.py      # MCP 服务器实现 (核心逻辑)
+├── main.py                # 项目入口脚本，用于启动服务器
+├── server_direct.py       # 独立的HTTP服务器实现，不依赖MCP
+├── clear_cache_and_run.py # 清理uv缓存并运行项目的脚本
+├── test.py                # 项目测试脚本
+├── pyproject.toml         # 项目配置文件 (依赖项, aiohttp, etc.)
 └── README.md              # 项目文档
 ```
 
