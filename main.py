@@ -17,13 +17,22 @@ import asyncio
 import shutil
 
 def ensure_path():
-    """确保当前目录在 Python 路径中"""
+    """
+    确保当前文件所在的目录在Python的sys.path中。
+
+    这样可以确保即使从其他目录运行脚本，模块也能正确导入。
+    """
     current_dir = os.path.dirname(os.path.abspath(__file__))
     if current_dir not in sys.path:
         sys.path.insert(0, current_dir)
 
 def check_node_installed():
-    """检查 Node.js 是否已安装"""
+    """
+    检查系统是否安装了Node.js。
+
+    Returns:
+        bool: 如果安装了Node.js则返回True，否则返回False。
+    """
     try:
         # 检查 node 命令是否可用
         subprocess.run(["node", "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
@@ -32,7 +41,12 @@ def check_node_installed():
         return False
 
 def check_npx_installed():
-    """检查 npx 命令是否可用"""
+    """
+    检查`npx`命令是否可用。
+
+    Returns:
+        bool: 如果`npx`可用则返回True，否则返回False。
+    """
     try:
         # 检查 npx 命令是否可用
         subprocess.run(["npx", "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
@@ -41,7 +55,12 @@ def check_npx_installed():
         return False
 
 def start_direct():
-    """直接启动 xtquantai 服务器"""
+    """
+    直接启动xtquantai服务器。
+
+    此函数尝试导入并运行`xtquantai`的主函数。如果导入失败，
+    它会回退到运行`server_direct.py`脚本作为备选。
+    """
     ensure_path()
     try:
         from xtquantai import main
@@ -64,7 +83,16 @@ def start_direct():
             sys.exit(1)
 
 def start_with_inspector(python_path=None, venv_path=None):
-    """通过 MCP Inspector 启动 xtquantai 服务器"""
+    """
+    通过MCP Inspector启动xtquantai服务器。
+
+    此函数检查Node.js和npx是否存在，然后使用`npx`运行MCP Inspector，
+    后者又启动xtquantai服务器。如果找不到Node.js或npx，它会回退到直接模式。
+
+    Args:
+        python_path (str, optional): 要使用的Python解释器的路径。默认为None。
+        venv_path (str, optional): 虚拟环境的路径。默认为None。
+    """
     # 检查 Node.js 和 npx 是否已安装
     if not check_node_installed():
         print("未检测到 Node.js，无法使用 MCP Inspector 模式")
@@ -100,7 +128,13 @@ def start_with_inspector(python_path=None, venv_path=None):
         start_direct()
 
 def main():
-    """主函数，解析命令行参数并启动服务器"""
+    """
+    主函数，解析命令行参数并启动服务器。
+
+    此函数设置命令行参数解析器以接受启动模式（direct, inspector, auto）、
+    Python解释器路径、虚拟环境路径和服务器端口。然后根据解析的参数
+    以适当的模式启动服务器。
+    """
     parser = argparse.ArgumentParser(description="启动 xtquantai 服务器")
     parser.add_argument("--mode", choices=["direct", "inspector", "auto"], default="auto",
                         help="启动模式: direct=直接启动, inspector=通过MCP Inspector启动, auto=自动选择")

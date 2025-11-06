@@ -94,7 +94,13 @@ except ImportError as e:
 
 # 确保xtdata已初始化
 def ensure_xtdc_initialized():
-    """确保XTQuant数据中心已初始化"""
+    """
+    确保XTQuant数据中心已初始化。
+
+    该函数检查`xtdata`全局变量。如果`xtdata`为None，它会尝试重新导入
+    `xtquant.xtdata`模块。如果导入失败，它将创建一个模拟的`xtdata`对象
+    并打印一条警告信息。
+    """
     global xtdata
     if xtdata is None:
         print("xtdata模块未初始化，尝试重新导入")
@@ -108,7 +114,15 @@ def ensure_xtdc_initialized():
 
 # API 函数
 def get_trading_dates(market="SH"):
-    """获取交易日期"""
+    """
+    获取指定市场的交易日期。
+
+    Args:
+        market (str): 市场代码 (例如, "SH" 代表上海市场)。默认为"SH"。
+
+    Returns:
+        dict: 包含交易日期列表或错误信息的字典。
+    """
     ensure_xtdc_initialized()
     try:
         dates = xtdata.get_trading_dates(market)
@@ -119,7 +133,15 @@ def get_trading_dates(market="SH"):
         return {"success": False, "error": str(e)}
 
 def get_stock_list(sector="沪深A股"):
-    """获取板块股票列表"""
+    """
+    获取指定板块的股票列表。
+
+    Args:
+        sector (str): 板块名称 (例如, "沪深A股")。默认为"沪深A股"。
+
+    Returns:
+        dict: 包含股票代码列表或错误信息的字典。
+    """
     ensure_xtdc_initialized()
     try:
         stocks = xtdata.get_stock_list_in_sector(sector)
@@ -130,7 +152,16 @@ def get_stock_list(sector="沪深A股"):
         return {"success": False, "error": str(e)}
 
 def get_instrument_detail(code, iscomplete=False):
-    """获取股票详情"""
+    """
+    获取指定股票的详细信息。
+
+    Args:
+        code (str): 股票代码 (例如, "000001.SZ")。
+        iscomplete (bool): 是否获取完整数据 (默认为 False)。
+
+    Returns:
+        dict: 包含股票详细信息或错误信息的字典。
+    """
     ensure_xtdc_initialized()
     try:
         detail = xtdata.get_instrument_detail(code, iscomplete)
@@ -141,7 +172,22 @@ def get_instrument_detail(code, iscomplete=False):
         return {"success": False, "error": str(e)}
 
 def get_history_market_data(fields, stock_list, period="1d", start_time="", end_time="", count=-1, dividend_type="none", fill_data=True):
-    """获取历史行情数据"""
+    """
+    获取历史行情数据。
+
+    Args:
+        fields (list or str): 要检索的字段列表 (例如, ["open", "close"]) 或逗号分隔的字符串。
+        stock_list (list or str): 股票代码列表 (例如, ["000001.SZ"]) 或逗号分隔的字符串。
+        period (str): 数据周期 (例如, "1d", "1m")。默认为 "1d"。
+        start_time (str): 开始时间 "YYYYMMDD"。默认为空。
+        end_time (str): 结束时间 "YYYYMMDD"。默认为空。
+        count (int): 要检索的数据点数量。默认为-1（全部）。
+        dividend_type (str): 除权类型。默认为 "none"。
+        fill_data (bool): 是否填充缺失数据。默认为 True。
+
+    Returns:
+        dict: 包含历史市场数据或错误信息的字典。
+    """
     ensure_xtdc_initialized()
     try:
         # 处理输入参数
@@ -169,7 +215,19 @@ def get_history_market_data(fields, stock_list, period="1d", start_time="", end_
         return {"success": False, "error": str(e)}
 
 def create_chart_panel(codes, period="1d", indicator_name="MA", param_names="", param_values=""):
-    """创建图表面板"""
+    """
+    创建图表面板以显示技术指标。
+
+    Args:
+        codes (str): 以逗号分隔的股票代码字符串。
+        period (str): 数据周期。默认为 "1d"。
+        indicator_name (str): 技术指标的名称。默认为 "MA"。
+        param_names (str): 以逗号分隔的参数名称。默认为空。
+        param_values (str): 以逗号分隔的参数值。默认为空。
+
+    Returns:
+        dict: 包含操作结果或错误信息的字典。
+    """
     ensure_xtdc_initialized()
     try:
         # 收集环境信息
@@ -297,13 +355,35 @@ def create_chart_panel(codes, period="1d", indicator_name="MA", param_names="", 
         }
 
 def create_custom_layout(codes, period="1d", indicator_name="MA", param_names="", param_values=""):
-    """创建自定义布局"""
+    """
+    创建自定义布局。
+
+    此函数是`create_chart_panel`的别名，并以相同的参数调用它。
+    它可以扩展以提供更具体的布局功能。
+
+    Args:
+        codes (str): 以逗号分隔的股票代码字符串。
+        period (str): 数据周期。默认为 "1d"。
+        indicator_name (str): 技术指标的名称。默认为 "MA"。
+        param_names (str): 以逗号分隔的参数名称。默认为空。
+        param_values (str): 以逗号分隔的参数值。默认为空。
+
+    Returns:
+        dict: 来自`create_chart_panel`的包含操作结果或错误信息的字典。
+    """
     # 这里简单地调用 create_chart_panel 函数，实际应用中可以根据需要扩展
     return create_chart_panel(codes, period, indicator_name, param_names, param_values)
 
 # HTTP 请求处理器
 class XTQuantAIHandler(BaseHTTPRequestHandler):
+    """
+    处理传入HTTP请求的请求处理器。
+
+    此类继承自`BaseHTTPRequestHandler`，并为GET、POST和OPTIONS请求
+    定义了处理器。它将API路由到相应的函数并以JSON格式返回结果。
+    """
     def _set_headers(self, content_type="application/json"):
+        """设置HTTP响应头。"""
         self.send_response(200)
         self.send_header("Content-type", content_type)
         self.send_header("Access-Control-Allow-Origin", "*")
@@ -312,9 +392,11 @@ class XTQuantAIHandler(BaseHTTPRequestHandler):
         self.end_headers()
     
     def do_OPTIONS(self):
+        """处理HTTP OPTIONS预检请求。"""
         self._set_headers()
     
     def do_GET(self):
+        """处理HTTP GET请求。"""
         # 解析URL路径和查询参数
         parsed_path = urllib.parse.urlparse(self.path)
         path = parsed_path.path
@@ -400,6 +482,7 @@ class XTQuantAIHandler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(result, ensure_ascii=False).encode("utf-8"))
     
     def do_POST(self):
+        """处理HTTP POST请求。"""
         # 获取请求内容长度
         content_length = int(self.headers.get("Content-Length", 0))
         
@@ -481,7 +564,12 @@ class XTQuantAIHandler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(result, ensure_ascii=False).encode("utf-8"))
 
 def run_server(port=8000):
-    """运行HTTP服务器"""
+    """
+    在指定端口上运行HTTP服务器。
+
+    Args:
+        port (int): 服务器监听的端口号。默认为 8000。
+    """
     server_address = ("", port)
     httpd = HTTPServer(server_address, XTQuantAIHandler)
     print(f"启动服务器在 http://localhost:{port}")
